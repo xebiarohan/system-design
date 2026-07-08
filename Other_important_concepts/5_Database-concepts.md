@@ -95,7 +95,7 @@
 6. Improving performance
    - Indexing
         - Used for speed up the retrieval operations
-        - A database table is a helper table that we can create with the help of a column or a group of columns
+        - An index table is a helper table that we can create with the help of a column or a group of columns
         - `Index` table contains column/columns that we selected and the row number
         - It can also be used for non-relational database like for document based databases
         - Indexing tradeoff
