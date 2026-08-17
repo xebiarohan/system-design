@@ -3,17 +3,19 @@ Absolutely. OAuth Roles are one of the most important concepts to understand bef
 11. OAuth 2.0 Roles
 
 OAuth 2.0 defines four main roles:
-
+```text
 Resource Owner
 Client
 Authorization Server
 Resource Server
+```
 
 Let's use a concrete example throughout:
 
 You build an application called PhotoApp, and users can connect their Google account so PhotoApp can access their Google Photos.
 
 The architecture looks like this:
+```text
 
                     ┌──────────────────────┐
                     │   Resource Owner     │
@@ -33,7 +35,7 @@ The architecture looks like this:
 │      Client      │────▶│   Resource Server    │
 │    (PhotoApp)    │     │   (Google Photos)    │
 └──────────────────┘     └──────────────────────┘
-
+```
 
 The key thing to understand is:
 
@@ -46,14 +48,14 @@ The Resource Owner is the entity that owns the protected resources.
 Usually, this is the user.
 
 For example, suppose you have:
-
+```text
 Google Account
     │
     ├── Photos
     ├── Contacts
     ├── Calendar
     └── Files
-
+```
 
 You are the owner of those resources.
 
