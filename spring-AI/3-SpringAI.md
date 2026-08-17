@@ -1,81 +1,74 @@
-3. What is Spring AI?
-1. The problem Spring AI solves
+```markdown
+# What is Spring AI?
 
-Imagine you have a Spring Boot application and you want to call an LLM.
+## 1) The problem Spring AI solves
+
+Imagine you have a **Spring Boot** application and you want to call an **LLM**.
 
 Without Spring AI, you might directly integrate with an LLM provider:
 
+```text
 Spring Boot
      ↓
 OpenAI API
      ↓
 GPT model
+```
 
+In that case, your Java code becomes tightly coupled to the provider’s API. For example (conceptually):
 
-Your Java code becomes tied to the provider's API.
-
-For example, conceptually:
-
+```java
 OpenAIClient client = new OpenAIClient(apiKey);
 
 OpenAIResponse response =
     client.chat(...);
-
+```
 
 Now suppose six months later you want to switch:
 
-OpenAI → Anthropic
+- **OpenAI → Anthropic**
+- **OpenAI → Google Gemini**
+- **Cloud LLM → Ollama running locally**
 
+Your application code may require significant changes.
 
-or:
+**Spring AI** tries to put an **abstraction layer** between your application and the AI provider:
 
-OpenAI → Google Gemini
+```text
+Your Application
+      │
+      ↓
+  ┌───────────┐
+  │ Spring AI │
+  └─────┬─────┘
+        │
+ ┌──────┼───────────────┐
+ ↓      ↓               ↓
+OpenAI Anthropic       Google
+ ↓      ↓               ↓
+Model  Model           Model
+```
 
+That is the fundamental idea.
 
-or:
+---
 
-Cloud LLM → Ollama running locally
-
-
-Your application code may need significant changes.
-
-Spring AI tries to put an abstraction layer between your application and the AI provider:
-
-                    Your Application
-                          │
-                          ↓
-                    ┌───────────┐
-                    │ Spring AI │
-                    └─────┬─────┘
-                          │
-          ┌───────────────┼───────────────┐
-          ↓               ↓               ↓
-       OpenAI          Anthropic       Google
-          │               │               │
-          ↓               ↓               ↓
-        Model            Model           Model
-
-
-That's the fundamental idea.
-
-2. Spring AI is NOT an AI model
+## 2) Spring AI is NOT an AI model
 
 This distinction is extremely important.
 
-Spring AI does not provide the LLM itself.
-
+**Spring AI does not provide the LLM itself.**  
 It is not:
 
-Spring AI = GPT
-
+- `Spring AI = GPT`
 
 Instead:
 
-Spring AI = framework for building applications that use AI models
+- **Spring AI = framework for building applications that use AI models**
 
+Think about it like this:
 
-Think about the relationship like this:
-
+```text
 Spring Boot
     ↓
 Application framework
@@ -91,112 +84,119 @@ AI model providers
 GPT / Claude / Gemini / Llama
     ↓
 Actual models
-
+```
 
 For example:
 
+```text
 Your Java application
-        ↓
-Spring AI
-        ↓
-OpenAI API
-        ↓
-GPT model
+      ↓
+   Spring AI
+      ↓
+ OpenAI API
+      ↓
+  GPT model
+```
 
+Spring AI is essentially the **integration/application layer**.
 
-Spring AI is essentially the integration/application layer.
+---
 
-3. Why does Spring AI exist?
+## 3) Why does Spring AI exist?
 
 Spring developers already understand a major principle:
 
-Don't couple your application unnecessarily to infrastructure.
+> Don't couple your application unnecessarily to infrastructure.
 
 For example, Spring provides abstractions around things like:
 
+```text
 Database
    ↓
 Spring Data
    ↓
 Database implementation
+```
 
-
-You don't necessarily want every piece of business logic to know the details of a particular database driver.
+You don’t want every piece of business logic to know which database driver is used.
 
 Similarly, Spring AI provides abstractions around AI providers:
 
+```text
 Your application
        ↓
    Spring AI
        ↓
 AI provider
+```
 
+The application works primarily with **Spring AI concepts**, not provider-specific concepts.
 
-The application works primarily with Spring AI concepts rather than provider-specific concepts.
+---
 
-4. The AI provider problem
+## 4) The AI provider problem
 
-The AI ecosystem is changing extremely quickly.
+The AI ecosystem changes very quickly. You could have:
 
-You could have:
+- OpenAI
+- Anthropic
+- Google
+- Azure OpenAI
+- Amazon Bedrock
+- Ollama
+- Mistral
+- Groq
+- etc.
 
-OpenAI
-Anthropic
-Google
-Azure OpenAI
-Amazon Bedrock
-Ollama
-Mistral
-Groq
-etc.
+Each provider can have different:
 
+- APIs
+- Authentication mechanisms
+- Request/response formats
+- Model names
+- Configuration
+- Streaming mechanisms
+- Tool-calling mechanisms
+- Embedding APIs
 
-And each provider can have different:
-
-APIs
-Authentication mechanisms
-Request formats
-Response formats
-Model names
-Configuration
-Streaming mechanisms
-Tool-calling mechanisms
-Embedding APIs
-
-Without an abstraction, your application can become heavily coupled to one provider.
+Without an abstraction, your application becomes heavily coupled to one provider.
 
 Spring AI attempts to normalize many of these concepts.
 
-5. Spring AI architecture
+---
+
+## 5) Spring AI architecture (simplified view)
 
 A simplified view looks like this:
 
-                 Spring Boot Application
-                          │
-                          ↓
-                    ┌───────────┐
-                    │ Spring AI │
-                    └───────────┘
-                          │
-       ┌──────────────────┼──────────────────┐
-       ↓                  ↓                  ↓
-   Chat Model       Embedding Model      Image Model
-       │                  │                  │
-       ↓                  ↓                  ↓
-    Provider           Provider           Provider
-       │                  │                  │
-       ↓                  ↓                  ↓
-      LLM             Embedding          Image Model
+```text
+Spring Boot Application
+         │
+         ↓
+   ┌───────────┐
+   │ Spring AI │
+   └───────────┘
+         │
+ ┌───────┼────────────────────┐
+ ↓       ↓                    ↓
+Chat Model Embedding Model  Image Model
+    │         │                 │
+    ↓         ↓                 ↓
+ Provider   Provider         Provider
+    │         │                 │
+    ↓         ↓                 ↓
+   LLM      Embedding    Image Model
+```
 
+---
 
-There are several important layers here.
-
-6. Layer 1 — Your Spring Boot application
+## 6) Layer 1 — Your Spring Boot application
 
 This is your normal application.
 
-For example:
+Example flow:
 
+```text
 Controller
     ↓
 Service
@@ -204,10 +204,11 @@ Service
 Spring AI
     ↓
 LLM
+```
 
+For example:
 
-Imagine you have:
-
+```java
 @RestController
 public class ChatController {
 
@@ -218,215 +219,165 @@ public class ChatController {
         return chatService.ask(question);
     }
 }
+```
 
+Ideally, the controller shouldn’t know:
 
-Your controller shouldn't ideally know:
+- how OpenAI’s HTTP API works
+- how Anthropic authentication works
+- how OpenAI response JSON is structured
+- how streaming is implemented by a specific provider
 
-how OpenAI's HTTP API works
-how Anthropic authentication works
-how an OpenAI response JSON is structured
-how streaming is implemented by a particular provider
+That’s infrastructure.
 
-That's infrastructure.
+---
 
-7. Layer 2 — Spring AI abstractions
+## 7) Layer 2 — Spring AI abstractions
 
 This is where Spring AI becomes interesting.
 
-Spring AI gives you concepts such as:
+Spring AI gives concepts such as:
 
-ChatModel
-EmbeddingModel
-ChatClient
-Prompt
-Message
-VectorStore
-Advisor
-Tool
+- `ChatModel`
+- `EmbeddingModel`
+- `ChatClient`
+- `Prompt`
+- `Message`
+- `VectorStore`
+- `Advisor`
+- `Tool`
 
+You’ll study these in more detail later. For Topic 3, understand their role:
 
-You'll study these in much more detail in Topic 4 and later phases.
+- `ChatModel` → abstraction for chat-oriented AI models
+- `EmbeddingModel` → abstraction for generating embeddings
 
-For Topic 3, understand the role of these concepts.
+So your application can use a consistent programming model.
 
-For example:
+---
 
-ChatModel
-    ↓
-Abstraction for interacting with chat-oriented AI models
+## 8) Model abstraction (most important concept)
 
+Suppose your application needs a chat model:
 
-and:
+```java
+ChatModel model;
+```
 
-EmbeddingModel
-    ↓
-Abstraction for generating embeddings
+Your application doesn’t necessarily care whether the underlying implementation is:
 
-
-So your application can work with a consistent programming model.
-
-8. Model abstraction
-
-This is probably the most important concept in Topic 3.
-
-Suppose your application needs a chat model.
+- OpenAI
+- Anthropic
+- Google
+- Ollama
+- etc.
 
 Conceptually:
 
-ChatModel model;
+```text
+ChatModel
+   │
+┌──┼────────────┐
+↓  ↓            ↓
+OpenAI impl   Google impl  Ollama impl
+↓  ↓            ↓
+GPT          Gemini       Llama
+```
 
+This is an example of **provider abstraction**.
 
-Your application doesn't necessarily care whether the underlying implementation is:
+---
 
-OpenAI
-Anthropic
-Google
-Ollama
-etc.
+## 9) Provider abstraction (and its limits)
 
+If you build initially using OpenAI:
 
-You can think of it as:
-
-                  ChatModel
-                     │
-        ┌────────────┼────────────┐
-        ↓            ↓            ↓
-    OpenAI impl   Google impl   Ollama impl
-        │            │            │
-        ↓            ↓            ↓
-      GPT          Gemini        Llama
-
-
-This is an example of provider abstraction.
-
-9. Provider abstraction
-
-Let's say you initially build:
-
+```text
 Application
     ↓
 Spring AI
     ↓
 OpenAI
+```
 
+Later switch to another provider:
 
-Later, you decide to use another provider:
-
+```text
 Application
     ↓
 Spring AI
     ↓
 Another provider
+```
 
+Ideally, application-level code doesn’t need major changes.
 
-Ideally, the application-level code doesn't need to fundamentally change.
+**But beware:** abstraction doesn’t mean all models behave identically.
 
-That's one of Spring AI's major benefits.
+Models differ in:
 
-But be careful:
+- vision support
+- tool calling support
+- context window size
+- pricing and latency
+- quality, etc.
 
-Abstraction does not mean every provider behaves identically.
+Spring AI can normalize the *programming model*, but it cannot make every model equivalent.
 
-Different models still have different capabilities.
+---
 
-For example:
+## 10) Spring Boot integration
 
-Model A → supports vision
-Model B → doesn't
+Spring AI is designed to fit naturally into the Spring ecosystem.
 
-Model A → supports tool calling
-Model B → doesn't
+Normally, Spring Boot handles:
 
-Model A → 128K context
-Model B → 32K context
-
-
-Spring AI can provide a common programming model, but it cannot magically make every model equivalent.
-
-10. Spring Boot integration
-
-The second major idea is:
-
-Spring AI is designed to fit naturally into the Spring Boot ecosystem.
-
-This is important if you're already a Spring developer.
-
-Normally, you expect Spring Boot to handle things like:
-
-Configuration
-Dependency Injection
-Beans
-Auto-configuration
-Properties
-Profiles
-HTTP clients
-Observability
-Testing
-
+- Configuration
+- Dependency injection
+- Beans
+- Auto-configuration
+- Properties and profiles
+- HTTP clients
+- Observability
+- Testing
 
 Spring AI builds on these mechanisms.
 
-So instead of manually constructing every AI client, you can configure the provider and let Spring Boot create the necessary infrastructure.
+So instead of manually constructing every AI client, you configure the provider and let Spring Boot create the needed beans.
 
-Conceptually:
+---
 
-application.properties
-        ↓
-Spring Boot
-        ↓
-Auto-configuration
-        ↓
-Spring AI beans
-        ↓
-Your application
+## 11) What is auto-configuration?
 
-11. What is auto-configuration?
+Suppose you add a Spring AI provider dependency and configure:
 
-This is another important Topic 3 concept.
-
-Suppose you add a Spring AI provider dependency.
-
-You configure something like:
-
+```properties
 spring.ai.openai.api-key=...
+```
 
-
-Spring Boot can detect the relevant dependency and configuration and automatically create the appropriate beans.
+Then Spring Boot can detect the dependency + configuration and automatically create the correct beans.
 
 Conceptually:
 
-Dependency
-    +
-Configuration
-    ↓
+```text
+Dependency + Configuration
+          ↓
 Spring Boot Auto-configuration
-    ↓
+          ↓
 AI-related beans
-    ↓
+          ↓
 Your application
+```
 
+---
 
-This is the same philosophy you're already familiar with from Spring Boot.
+## 12) Dependency injection
 
-For example, Spring Boot can automatically configure:
+Because Spring AI integrates with Spring’s DI model, you can inject AI components into services.
 
-DataSource
-ObjectMapper
-RestClient
-WebClient
-Security infrastructure
+Example:
 
-
-depending on what dependencies and configuration you provide.
-
-Spring AI extends this experience into AI integrations.
-
-12. Dependency Injection
-
-Because Spring AI fits into Spring's dependency injection model, you can inject AI components into your services.
-
-Conceptually:
-
+```java
 @Service
 public class CustomerService {
 
@@ -436,258 +387,242 @@ public class CustomerService {
         this.chatModel = chatModel;
     }
 }
+```
 
+Key idea:
 
-The important thing isn't memorizing this code yet.
+- Your service depends on an **abstraction**
+- Spring provides the implementation
 
-The important architectural idea is:
+Cleaner than scattering provider-specific clients everywhere.
 
-Your Service
-     ↓
-depends on abstraction
-     ↓
-ChatModel
-     ↓
-Spring provides implementation
+---
 
+## 13) Spring AI and the Spring ecosystem
 
-This is much cleaner than scattering provider-specific clients throughout your application.
+Spring AI is powerful because it fits into a larger Spring architecture:
 
-13. Spring AI and the Spring ecosystem
-
-This is where Spring AI becomes especially powerful.
-
-It's not an isolated library.
-
-It can sit inside a larger Spring architecture:
-
-                    React
-                      ↓
-                 Spring MVC
-                      ↓
-                Spring Service
-                      ↓
-                  Spring AI
-             ┌────────┼─────────┐
-             ↓        ↓         ↓
-           LLM      Vector DB   Tools
-             ↓        ↓         ↓
-          Provider  PostgreSQL  APIs
-
-
-And you can combine this with things you already know:
-
-Spring Boot
-Spring Security
-Spring Data
-Spring Web
-Spring Actuator
-Micrometer
+```text
+React
+  ↓
+Spring MVC
+  ↓
+Spring Service
+  ↓
 Spring AI
+ ┌────────┼─────────┐
+ ↓        ↓         ↓
+LLM     Vector DB   Tools
+ ↓        ↓         ↓
+Provider PostgreSQL  APIs
+```
 
+You can combine it with:
 
-This is one reason Spring AI is attractive for Java backend developers.
+- Spring Boot
+- Spring Security
+- Spring Data
+- Spring Web
+- Spring Actuator
+- Micrometer
+- Spring AI
 
-14. Spring AI is more than "an LLM client"
+---
 
-This distinction is worth understanding early.
+## 14) Spring AI is more than an "LLM client"
 
 A beginner might think:
 
-"Spring AI is just a wrapper around OpenAI."
+> Spring AI is just a wrapper around OpenAI.
 
-That's too narrow.
+That’s too narrow.
 
-Spring AI provides abstractions and infrastructure for several AI application patterns.
+Spring AI provides abstractions/infrastructure for patterns like:
 
-For example:
-
+### Chat
+```text
 Chat
-Application
-    ↓
+  ↓
 Chat Model
-    ↓
+  ↓
 LLM
+```
 
-Embeddings
+### Embeddings
+```text
 Text
- ↓
+  ↓
 EmbeddingModel
- ↓
+  ↓
 Vector
+```
 
-RAG
+### RAG
+```text
 Question
-    ↓
+  ↓
 Retrieve documents
-    ↓
+  ↓
 Relevant context
-    ↓
+  ↓
 LLM
+  ↓
+Answer
+```
 
-Tool calling
+### Tool calling
+```text
 User
- ↓
+  ↓
 LLM
- ↓
+  ↓
 Tool
- ↓
+  ↓
 Java method/API
- ↓
+  ↓
 LLM
+  ↓
+Answer
+```
 
-Memory
+### Memory
+```text
 Conversation
- ↓
+  ↓
 Memory
- ↓
+  ↓
 Relevant context
- ↓
+  ↓
 LLM
+  ↓
+Answer
+```
 
-Structured output
+### Structured output
+```text
 LLM
- ↓
+  ↓
 Structured response
- ↓
+  ↓
 Java object
-
+```
 
 So Spring AI is better thought of as:
 
-A Spring-oriented framework for building AI-powered applications.
+> A Spring-oriented framework for building AI-powered applications.
 
-15. A useful mental model
+---
 
-As a backend developer, I'd remember Spring AI using this analogy:
+## 15) A useful mental model
 
-Spring Data
-     ↓
-Database abstraction
+As a backend developer, remember Spring AI like this:
 
-Spring Security
-     ↓
-Security abstraction
+- **Spring Data** → database abstraction
+- **Spring Security** → security abstraction
+- **Spring AI** → AI application abstraction
 
-Spring AI
-     ↓
-AI application abstraction
+But don’t take it too literally. AI systems have additional concerns:
 
+- models
+- prompts
+- tokens
+- embeddings
+- vector stores
+- RAG
+- memory
+- tools
+- streaming
+- multimodal input
+- evaluation
+- observability
 
-But don't take this analogy too literally.
+Spring AI provides abstractions/integrations around these.
 
-Spring AI isn't simply "Spring Data for AI."
+---
 
-AI systems have additional concerns:
+## 16) Where does `ChatClient` fit?
 
-Models
-Prompts
-Tokens
-Embeddings
-Vector stores
-RAG
-Memory
-Tools
-Streaming
-Multimodal input
-Evaluation
-Observability
-
-
-Spring AI provides abstractions and integrations around these concerns.
-
-16. Where does ChatClient fit?
-
-You'll study ChatClient in Topic 4, but you should already understand its position.
+(You’ll cover this more later.)
 
 Think:
 
+```text
 Your application
-       ↓
-   ChatClient
-       ↓
-   ChatModel
-       ↓
+      ↓
+  ChatClient
+      ↓
+  ChatModel
+      ↓
 Provider implementation
-       ↓
-      LLM
+      ↓
+     LLM
+```
 
+Example:
 
-For example:
-
+```text
 Controller
-   ↓
+  ↓
 Service
-   ↓
+  ↓
 ChatClient
-   ↓
+  ↓
 ChatModel
-   ↓
+  ↓
 OpenAI
-   ↓
+  ↓
 GPT
+```
 
+`ChatClient` is a convenient fluent API for interacting with chat models.
 
-The ChatClient gives you a convenient fluent API for interacting with chat models.
+---
 
-We'll go much deeper into this in Topic 4.
+## 17) `ChatModel` vs `ChatClient`
 
-17. ChatModel vs ChatClient
-
-This distinction is extremely important for your roadmap.
+This distinction is extremely important.
 
 At a high level:
 
-ChatModel
+### `ChatModel`
+- lower-level model abstraction
+- “Talk to the underlying chat model”
 
-Lower-level model abstraction.
-
-Think:
-
-"Talk to the underlying chat model."
-
-ChatClient
-
-Higher-level developer-friendly API.
-
-Think:
-
-"Build an interaction with the model."
-
+### `ChatClient`
+- higher-level developer-friendly API
+- “Build an interaction with the model”
 
 Conceptually:
 
-                    ChatClient
-                        ↓
-                    ChatModel
-                        ↓
-                   AI Provider
-                        ↓
-                       LLM
+```text
+ChatClient
+   ↓
+ChatModel
+   ↓
+AI Provider
+   ↓
+LLM
+```
 
+---
 
-Don't worry about memorizing every method yet.
+## 18) `EmbeddingModel`
 
-You'll spend several hours on this in the next topic.
+Same abstraction idea applies to embeddings.
 
-18. EmbeddingModel
+Example: converting:
 
-The same abstraction idea applies to embeddings.
+> “Spring AI is useful”
 
-Suppose you want to convert:
+into a vector:
 
-"Spring AI is useful"
-
-
-into:
-
+```text
 [0.12, -0.42, 0.81, ...]
+```
 
+Spring AI gives:
 
-You could directly use a provider's embedding API.
-
-Spring AI instead gives you an abstraction:
-
+```text
 EmbeddingModel
        ↓
 Provider
@@ -695,127 +630,103 @@ Provider
 Embedding model
        ↓
 Vector
+```
 
+This becomes crucial later when you learn:
 
-This becomes extremely important later when you learn:
+- Embeddings → VectorStore → RAG
 
-Embeddings
+---
+
+## 19) Spring AI and RAG
+
+One of the biggest reasons to learn Spring AI is building:
+
+> “Chat with my company’s documents”
+
+Eventually, the architecture often looks like:
+
+```text
+User Question
      ↓
-Vector Store
+Spring AI
      ↓
-RAG
+Embedding
+     ↓
+PostgreSQL/pgvector
+     ↓
+Relevant chunks
+     ↓
+Prompt
+     ↓
+LLM
+     ↓
+Answer
+```
 
-19. Spring AI and RAG
+Spring AI provides abstractions for many parts of this architecture.
 
-One of the biggest reasons to learn Spring AI is building applications such as:
+That’s why the roadmap goes:
 
-"Chat with my company's documents."
+Spring AI fundamentals → Chat → Embeddings → Vector databases → RAG
 
-The architecture might eventually look like:
+---
 
-                 User Question
-                       ↓
-                  Spring AI
-                       ↓
-                  Embedding
-                       ↓
-              PostgreSQL/pgvector
-                       ↓
-                Relevant chunks
-                       ↓
-                   Prompt
-                       ↓
-                     LLM
-                       ↓
-                    Answer
-
-
-Spring AI provides abstractions for many pieces of this architecture.
-
-That's why the roadmap moves from:
-
-Spring AI fundamentals
-        ↓
-Chat
-        ↓
-Embeddings
-        ↓
-Vector databases
-        ↓
-RAG
-
-
-The ordering is deliberate.
-
-20. Spring AI doesn't remove the need to understand AI
-
-This is a very important warning.
+## 20) Spring AI does not remove the need to understand AI
 
 You should not think:
 
-"Spring AI handles AI, so I don't need to understand LLMs."
+> Spring AI handles AI, so you don’t need LLM fundamentals.
 
 Quite the opposite.
 
-Suppose Spring AI gives you:
+Even if you use `ChatClient`, you still need to understand:
 
-ChatClient
+- tokens
+- context window
+- system prompts
+- temperature
+- embeddings
+- RAG
+- tool calling
 
+That’s why the roadmap starts with:
 
-You still need to understand:
+- Phase 0: LLM fundamentals
+- Phase 1: Spring AI fundamentals
+- Phase 2: Chat models
 
-What is a token?
-What is a context window?
-What is a system prompt?
-What is temperature?
-What is an embedding?
-What is RAG?
-What is tool calling?
+---
 
+## 21) What happens when a request is made? (conceptual flow)
 
-Otherwise you'll know the API but not understand the system.
+Suppose your app receives:
 
-That's why your roadmap correctly starts with:
+`GET /ask?question=What is Spring AI?`
 
-Phase 0
-LLM fundamentals
-       ↓
-Phase 1
-Spring AI fundamentals
-       ↓
-Phase 2
-Chat Models
+Conceptual architecture:
 
-21. What happens when a request is made?
-
-Let's follow a conceptual request.
-
-Suppose your application receives:
-
-GET /ask?question=What is Spring AI?
-
-
-The architecture might be:
-
+```text
 Browser
-   ↓
+  ↓
 Spring Controller
-   ↓
+  ↓
 Spring Service
-   ↓
+  ↓
 ChatClient
-   ↓
+  ↓
 ChatModel
-   ↓
+  ↓
 Spring AI provider implementation
-   ↓
+  ↓
 OpenAI/Anthropic/etc.
-   ↓
+  ↓
 LLM
+```
 
+And back on the response path:
 
-Then the response travels back:
-
+```text
 LLM
  ↓
 Provider implementation
@@ -831,311 +742,224 @@ Controller
 HTTP response
  ↓
 Browser
+```
 
+That layered architecture should be in your head.
 
-That layered architecture is what you should have in your head.
+---
 
-22. Why not just use the provider SDK?
+## 22) Why not just use the provider SDK?
 
-This is a very reasonable question.
+You can absolutely use provider SDKs.
 
-You absolutely can.
+For a tiny app:
 
-For a tiny application:
-
+```text
 Spring Boot
-    ↓
+   ↓
 OpenAI SDK
-    ↓
+   ↓
 OpenAI
+```
 
+might be perfectly fine.
 
-might be perfectly reasonable.
+Spring AI becomes more valuable as you need broader AI concerns:
 
-Spring AI becomes more valuable when your application starts dealing with broader AI application concerns:
+- multiple providers
+- prompt management
+- structured output
+- streaming
+- embeddings
+- vector stores
+- RAG
+- memory
+- tool calling
+- advisors
+- observability
 
-Multiple providers
-       +
-Prompt management
-       +
-Structured output
-       +
-Streaming
-       +
-Embeddings
-       +
-Vector stores
-       +
-RAG
-       +
-Memory
-       +
-Tool calling
-       +
-Advisors
-       +
-Observability
+The value is not just “send an HTTP request to an LLM”.  
+It’s having a Spring-native programming model for AI applications.
 
+---
 
-The value isn't merely:
+## 23) The abstraction has a trade-off
 
-"I can send an HTTP request to an LLM."
+Abstraction comes with a trade-off:
 
-The value is having a Spring-native programming model for AI applications.
+- Direct SDK → maximum provider-specific control
+- Spring AI → common abstraction + Spring integration
 
-23. The abstraction has a trade-off
+If a provider feature isn’t exposed by Spring AI, you may need provider-specific APIs.
 
-Don't blindly assume abstraction is always better.
+A good engineer understands both:
 
-There is a trade-off:
+- Spring AI abstraction
+- underlying provider API
 
-Direct provider SDK
-        ↓
-Maximum provider-specific control
+---
 
+## 24) What you should understand after Topic 3
 
-versus:
+By the end of Topic 3, you should be able to answer:
 
-Spring AI
-        ↓
-Common abstraction + Spring integration
+### Q1. What is Spring AI?
+A Spring framework for building AI-powered applications, providing abstractions and integrations for AI models and AI application patterns.
 
+### Q2. Is Spring AI an LLM?
+No.  
+**Spring AI ≠ LLM**
 
-If you need a provider-specific feature that Spring AI doesn't expose directly, you may need to use provider-specific capabilities.
-
-So a good engineer understands both:
-
-Spring AI abstraction
-        +
-Underlying provider API
-
-
-rather than believing the abstraction completely hides the provider.
-
-24. What you should understand after Topic 3
-
-By the end of these two hours, you should be able to answer these questions without looking at documentation.
-
-Q1. What is Spring AI?
-
-A Spring framework for building AI-powered applications, providing abstractions and integrations for AI models and related application patterns.
-
-Q2. Is Spring AI an LLM?
-
-No.
-
-Spring AI ≠ LLM
-
-
-Spring AI integrates applications with LLMs and other AI capabilities.
-
-Q3. Who provides the actual model?
-
+### Q3. Who provides the actual model?
 Providers such as:
 
-OpenAI
-Anthropic
-Google
-Ollama
-Azure
-Amazon Bedrock
-etc.
+- OpenAI
+- Anthropic
+- Google
+- Ollama
+- Azure
+- Amazon Bedrock
+- etc.
 
-Q4. Why use Spring AI?
-
+### Q4. Why use Spring AI?
 Primarily:
 
-Abstraction
-+
-Spring Boot integration
-+
-Provider integrations
-+
-AI application features
+- Abstraction
+- Spring Boot integration
+- Provider integrations
+- AI application features
 
-Q5. What is auto-configuration?
+### Q5. What is auto-configuration?
+Spring Boot can automatically create/configure relevant Spring AI infrastructure based on dependencies and application config.
 
-Spring Boot can automatically create/configure relevant Spring AI infrastructure based on dependencies and application configuration.
+### Q6. What is model abstraction?
+Your application can program against concepts like:
 
-Q6. What is model abstraction?
+- `ChatModel`
+- `EmbeddingModel`
 
-Your application can program against concepts such as:
+instead of coupling everything to a particular provider.
 
-ChatModel
-EmbeddingModel
+### Q7. Does Spring AI make all AI models equivalent?
+No. Providers/models differ in:
 
+- capabilities
+- context limits
+- pricing
+- quality
+- latency
+- tool support
+- vision support
 
-rather than directly coupling every part of the application to a particular provider.
+---
 
-Q7. Does Spring AI make all AI models equivalent?
-
-No.
-
-Providers/models still have different:
-
-Capabilities
-Context limits
-Pricing
-Quality
-Latency
-Tool support
-Vision support
-
-25. The architecture you should memorize
+## 25) The architecture you should memorize
 
 If you remember only one diagram from Topic 3, remember this:
 
-                  ┌─────────────────────┐
-                  │   Spring Boot App   │
-                  │                     │
-                  │ Controller          │
-                  │ Service             │
-                  │ Business Logic      │
-                  └──────────┬──────────┘
-                             │
-                             ↓
-                  ┌─────────────────────┐
-                  │      Spring AI      │
-                  │                     │
-                  │ ChatClient          │
-                  │ ChatModel           │
-                  │ EmbeddingModel      │
-                  │ Prompt              │
-                  │ Advisors            │
-                  │ VectorStore etc.    │
-                  └──────────┬──────────┘
-                             │
-                ┌────────────┼────────────┐
-                ↓            ↓            ↓
-             OpenAI      Anthropic      Google
-                ↓            ↓            ↓
-               GPT          Claude       Gemini
-
+```text
+┌─────────────────────┐
+│   Spring Boot App   │
+│                     │
+│ Controller          │
+│ Service             │
+│ Business Logic      │
+└──────────┬──────────┘
+           │
+           ↓
+┌─────────────────────┐
+│      Spring AI      │
+│                     │
+│ ChatClient          │
+│ ChatModel           │
+│ EmbeddingModel      │
+│ Prompt              │
+│ Advisors            │
+│ VectorStore etc.    │
+└──────────┬──────────┘
+           │
+      ┌────┼────────────┐
+      ↓     ↓            ↓
+   OpenAI  Anthropic     Google
+      ↓     ↓            ↓
+     GPT   Claude       Gemini
+```
 
 And eventually:
 
+```text
                        Spring AI
                            │
        ┌───────────────────┼──────────────────┐
        ↓                   ↓                  ↓
     Chat/LLM            Embeddings          Tools
        │                   │                  │
-       ↓                   ↓                  ↓
+       ↓                   │                  ↓
       RAG              Vector Store        APIs
        │                   │                  │
        └───────────────────┼──────────────────┘
                            ↓
                     AI Application
+```
 
-26. How I recommend you spend your 2 hours
+---
 
-Don't spend the entire two hours reading documentation.
+## 26) How to spend your ~2 hours
 
-First 30 minutes — Architecture
+Don’t spend the entire two hours reading documentation.
 
-Understand:
+- **First 30 minutes — Architecture**
+  - Spring Boot → Spring AI → Provider → Model
+  - Understand why the abstraction exists
 
-Spring Boot
-     ↓
-Spring AI
-     ↓
-Provider
-     ↓
-Model
+- **Next 30 minutes — Core concepts**
+  - Learn roles of:
+    - `ChatModel`
+    - `EmbeddingModel`
+    - `ChatClient`
+    - `Prompt`
+    - `Message`
+  - Don’t memorize methods yet
 
+- **Next 30 minutes — Hands-on**
+  - Create a tiny Spring Boot app
+  - Make one LLM request
+  - Goal:
+    - HTTP request → Controller → ChatClient → LLM → Response
 
-And understand why the abstraction exists.
+- **Final 30 minutes — Experiment**
+  - Change provider/model configuration (if possible)
+  - Ask:
+    - What belongs to my app?
+    - What belongs to the AI provider?
 
-Next 30 minutes — Core concepts
+---
 
-Learn the roles of:
+## The most important takeaway
 
-ChatModel
-EmbeddingModel
-ChatClient
-Prompt
-Message
+As a backend engineer, summarize Topic 3 like this:
 
+> **Spring AI** is an abstraction and integration layer that lets Spring Boot applications work with AI models and AI application capabilities using a **Spring-native programming model**, while reducing unnecessary coupling to individual AI providers.
 
-Don't memorize methods yet.
+Mental model:
 
-Next 30 minutes — Hands-on
-
-Create a tiny Spring Boot application and make one LLM request.
-
-Your goal is simply:
-
-HTTP request
-     ↓
-Controller
-     ↓
-ChatClient
-     ↓
-LLM
-     ↓
-Response
-
-Final 30 minutes — Experiment
-
-Change the provider/model configuration if possible.
-
-Then ask yourself:
-
-What code belongs to my application, and what code belongs to the AI provider?
-
-That's the architectural insight you're trying to develop.
-
-The most important takeaway
-
-As a backend engineer, I would summarize Topic 3 like this:
-
-Spring AI is an abstraction and integration layer that lets Spring Boot applications work with AI models and AI application capabilities using a Spring-native programming model, while reducing unnecessary coupling to individual AI providers.
-
-The mental model is:
-
-              YOUR BUSINESS LOGIC
-                      ↓
-                 Spring AI
-                      ↓
-        ┌─────────────┼─────────────┐
-        ↓             ↓             ↓
-     OpenAI        Anthropic      Google
-        ↓             ↓             ↓
-       GPT          Claude        Gemini
-
-
-And that is the foundation for everything that follows in your roadmap:
-
-Topic 3
-What is Spring AI?
+```text
+YOUR BUSINESS LOGIC
        ↓
-Topic 4
-Core abstractions
+  Spring AI
        ↓
-ChatClient / ChatModel
-       ↓
-Structured Output
-       ↓
-Embeddings
-       ↓
-Vector Stores
-       ↓
-RAG
-       ↓
-Advisors
-       ↓
-Memory
-       ↓
-Tool Calling
-       ↓
-MCP
-       ↓
-Agents
+┌─────────────┼─────────────┐
+↓             ↓             ↓
+OpenAI       Anthropic      Google
+↓             ↓             ↓
+GPT          Claude        Gemini
+```
 
+And that becomes the foundation for everything that follows in the roadmap.
 
-You can copy this entire response into a file named:
+---
 
-spring-ai-topic-3-what-is-spring-ai.md
+## Where to go next in your roadmap
 
-
-and it will be valid Markdown.
+Topic 3 → Topic 4 → ChatClient/ChatModel → Structured Output → Embeddings → Vector Stores → RAG → Advisors → Memory → Tool Calling → MCP → Agents
+```
