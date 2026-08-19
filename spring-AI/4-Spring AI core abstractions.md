@@ -1,56 +1,25 @@
-You're right. I formatted it visually as Markdown, but I didn't make it cleanly copy-pastable as a standalone .md file.
+# Topic 4 — Spring AI Core Abstractions
 
-Below is the corrected version. It is plain Markdown source, with headings starting from #, proper tables, callouts, diagrams, and code fences. You can copy the whole thing directly into topic-4-spring-ai-core-abstractions.md.
+## 1. Learning Goal
 
-Topic 4 — Spring AI Core Abstractions
+### 1.1 What You Will Learn
 
-Roadmap Phase: Phase 1 — Spring AI Fundamentals
-Estimated Time: 3–4 hours
-Prerequisite: Topic 3 — What is Spring AI?
+By the end of this topic, you should understand:
 
-1. Learning Goal
+- `ChatModel`
+- `EmbeddingModel`
+- `ChatClient`
+- `Prompt`
+- `Message`
+- `ChatResponse`
 
-By the end of this topic, you should understand the core abstractions that Spring AI provides:
+> **Goal:** Understand why these abstractions exist, how they relate to each other, and when to use each one.
 
-ChatModel
-EmbeddingModel
-ChatClient
-Prompt
-Message
-ChatResponse
+## 2. Why Does Spring AI Need Abstractions?
 
-The goal is not to memorize APIs.
+Spring AI provides an abstraction layer between your application and AI providers.
 
-The goal is to understand:
-
-Why do these abstractions exist, how do they relate to each other, and what problem does each one solve?
-
-2. Why Does Spring AI Need Abstractions?
-
-Suppose your Spring Boot application directly uses an AI provider SDK:
-
-Spring Boot Application
-        |
-        v
-   Provider SDK
-        |
-        v
-    AI Provider
-
-
-Your application becomes tightly coupled to that provider.
-
-For example:
-
-OpenAiClient client;
-
-
-Now imagine you want to switch providers.
-
-You may need to change a significant amount of application code.
-
-Spring AI introduces abstractions between your application and the provider:
-
+```text
 Spring Boot Application
         |
         v
@@ -60,22 +29,22 @@ Spring Boot Application
   AI Abstraction
         |
         v
- Provider Implementation
+Provider Implementation
         |
         v
     AI Provider
 
 
-The basic idea is:
+Without an abstraction layer, your application could become tightly coupled to a specific provider:
 
-Your application should depend primarily on Spring AI abstractions rather than provider-specific implementation details.
+OpenAiClient client;
 
-This is very similar to the interface-based programming you already know from Spring.
 
-3. The Core Abstractions
+With Spring AI, your application can work with abstractions such as:
 
-The most important abstractions for this topic are:
+ChatModel chatModel;
 
+3. Core Spring AI Abstractions
 Abstraction	Purpose
 ChatModel	Abstraction for interacting with a chat/generative model
 EmbeddingModel	Converts input into vector embeddings
@@ -83,9 +52,7 @@ ChatClient	Higher-level fluent API for interacting with chat models
 Prompt	Represents a structured request sent to a chat model
 Message	Represents an individual conversational message
 ChatResponse	Represents the model's response
-
-A simplified architecture looks like this:
-
+4. The Big Picture
                          Your Application
                                 |
                                 v
@@ -109,24 +76,25 @@ A simplified architecture looks like this:
 
 For embeddings:
 
-                         Your Application
-                                |
-                                v
-                        EmbeddingModel
-                                |
-                                v
-                     Embedding Provider
-                                |
-                                v
-                         Embedding Vector
-                                |
-                                v
-                         Vector Database
+Text
+ |
+ v
+EmbeddingModel
+ |
+ v
+Embedding Vector
+ |
+ v
+Vector Database
 
-4. ChatModel
-4.1 What Is ChatModel?
+5. ChatModel
+5.1 What Is ChatModel?
 
-ChatModel is the core abstraction for communicating with a chat/generative AI model.
+ChatModel is the core abstraction for communicating with a chat or generative AI model.
+
+Think of it as:
+
+ChatModel represents something capable of taking a prompt and generating a response.
 
 Conceptually:
 
@@ -138,21 +106,14 @@ ChatModel
    v
 ChatResponse
 
+5.2 Why Does ChatModel Exist?
 
-You can think of it as:
-
-"ChatModel represents something capable of taking a prompt and generating a response."
-
-The actual implementation underneath could communicate with different AI providers.
-
-4.2 Why Does ChatModel Exist?
-
-Imagine your service directly depends on a provider-specific implementation:
+Suppose your service directly depends on a provider-specific implementation:
 
 private final SomeProviderChatModel chatModel;
 
 
-Your application now knows about that provider.
+Your application is now coupled to that provider.
 
 Instead, Spring AI encourages dependency on the abstraction:
 
@@ -169,96 +130,15 @@ Conceptually:
          Provider A    Provider B    Provider C
 
 
-Your business code interacts with the abstraction.
+The application depends on the interface/abstraction while Spring AI handles the provider-specific implementation.
 
-The provider-specific implementation is hidden behind it.
-
-5. ChatModel and Dependency Inversion
-
-This should look familiar if you know Spring.
-
-Consider:
-
-public interface PaymentService {
-
-    void pay();
-
-}
-
-
-Your business logic depends on:
-
-PaymentService
-
-
-rather than:
-
-StripePaymentService
-
-
-The same idea applies to AI:
-
-Application
-     |
-     v
- ChatModel
-     |
-     +---- Provider A
-     |
-     +---- Provider B
-     |
-     +---- Provider C
-
-
-This is one of the important architectural ideas behind Spring AI.
-
-Spring AI reduces coupling between your application and a specific AI provider.
-
-6. Basic ChatModel Flow
-
-Conceptually:
-
-+----------------+
-|     Prompt     |
-+----------------+
-        |
-        v
-+----------------+
-|   ChatModel    |
-+----------------+
-        |
-        v
-+----------------+
-| AI Provider    |
-+----------------+
-        |
-        v
-+----------------+
-|      LLM       |
-+----------------+
-        |
-        v
-+----------------+
-| ChatResponse   |
-+----------------+
-
-
-At a lower level, your application can work directly with the model abstraction:
-
-Prompt prompt = new Prompt(...);
-
-ChatResponse response = chatModel.call(prompt);
-
-
-This is lower-level than using ChatClient.
-
-7. EmbeddingModel
+6. EmbeddingModel
 
 EmbeddingModel solves a different problem.
 
-A ChatModel is primarily about generation.
+ChatModel is primarily about generating responses.
 
-An EmbeddingModel is about converting information into vectors.
+EmbeddingModel is about converting information into vectors.
 
 Text
  |
@@ -280,86 +160,30 @@ For example:
 [0.12, -0.42, 0.73, 0.19, ...]
 
 
-The resulting vector represents the semantic characteristics of the input.
-
-8. Why Do We Need Embeddings?
-
-Embeddings are extremely important for:
+These vectors are later used for:
 
 Semantic search
 Vector databases
 RAG
-Recommendation systems
 Similarity comparison
-
-Suppose you have these documents:
-
-Document A:
-"Spring Boot simplifies Java application development."
-
-Document B:
-"Spring AI provides abstractions for AI applications."
-
-Document C:
-"Dubai has a hot climate."
-
-
-The user asks:
-
-"How does Spring Boot make Java development easier?"
-
-
-A keyword search may not be sufficient.
-
-With embeddings:
-
-Question
-   |
-   v
-EmbeddingModel
-   |
-   v
-Question Vector
-   |
-   v
-Vector Database
-   |
-   +---- Document A -> High similarity
-   |
-   +---- Document B -> Medium similarity
-   |
-   +---- Document C -> Low similarity
-
-
-This is the foundation for semantic retrieval and eventually RAG.
-
-9. ChatModel vs EmbeddingModel
-
-This distinction is extremely important.
-
+7. ChatModel vs EmbeddingModel
 	ChatModel	EmbeddingModel
 Main purpose	Generate responses	Generate vector representations
-Input	Prompt/messages	Text or other supported input
+Input	Prompt/messages	Text
 Output	Chat response	Embedding vector
 Typical use	Chat, generation	Search, similarity, RAG
-Example output	"Spring AI is..."	[0.12, -0.43, ...]
 
-Remember:
+The easiest way to remember this is:
 
 ChatModel
     =
 Generate content
 
-
-while:
-
 EmbeddingModel
     =
 Represent content as vectors
 
-10. Message
-
-Now we reach one of the most important concepts.
+8. Message
 
 A chat model does not simply receive one giant string.
 
@@ -377,9 +201,9 @@ ASSISTANT:
 Dependency injection is a design technique...
 
 
-Spring AI represents these individual conversational units using Message.
+Spring AI represents these conversational units using Message.
 
-Conceptually:
+A message conceptually contains:
 
 Message
  |
@@ -387,59 +211,42 @@ Message
  |
  +---- Content
 
-11. Message Roles
+8.1 System Message
 
-The most important message types are:
-
-11.1 System Message
-
-Provides instructions or context to the model.
+Provides instructions or context:
 
 System:
 You are an expert Java instructor.
 Explain concepts with simple examples.
 
+8.2 User Message
 
-Think:
-
-System Message
-      |
-      v
-Instructions / Behavior / Context
-
-11.2 User Message
-
-Represents the user's request.
+Represents the user's request:
 
 User:
 Explain dependency injection.
 
-11.3 Assistant Message
+8.3 Assistant Message
 
-Represents an assistant/model response.
+Represents the assistant/model response:
 
 Assistant:
 Dependency injection is a design technique...
 
-12. Why Are Messages Separate Objects?
+9. Why Are Messages Separate Objects?
 
-You might ask:
+You might wonder:
 
-Why not just send a String?
-
-For example:
-
-"Explain dependency injection."
-
+Why not simply send a String?
 
 Because a chat interaction has structure.
 
-Compare:
+Instead of:
 
 "Explain dependency injection."
 
 
-with:
+you can have:
 
 SYSTEM:
 You are an expert Java teacher.
@@ -448,9 +255,7 @@ USER:
 Explain dependency injection.
 
 
-The second contains additional semantic information.
-
-The model can distinguish:
+The model can distinguish between:
 
 System instructions
         +
@@ -459,7 +264,7 @@ User request
 Conversation history
 
 
-This structure becomes very important for:
+This structure becomes important for:
 
 System prompts
 Conversation history
@@ -467,7 +272,7 @@ Memory
 Tool calling
 Multimodal input
 Prompt construction
-13. Prompt
+10. Prompt
 
 A Prompt represents the structured request sent to a chat model.
 
@@ -485,18 +290,10 @@ For example:
 Prompt
  |
  +---- System Message
- |       |
- |       +---- "You are a Java expert."
  |
  +---- User Message
- |       |
- |       +---- "Explain interfaces."
  |
  +---- Options
-         |
-         +---- Temperature
-         |
-         +---- Max output tokens
 
 
 Therefore:
@@ -507,12 +304,12 @@ Prompt != String
 A better mental model is:
 
 Prompt
-    |
-    +---- Messages
-    |
-    +---- Options
+ |
+ +---- Messages
+ |
+ +---- Options
 
-14. Prompt vs Message
+11. Prompt vs Message
 
 This is a common beginner confusion.
 
@@ -536,31 +333,13 @@ Prompt
  +---- Options
 
 
-Therefore:
-
-Message
-   |
-   +---- System
-   +---- User
-   +---- Assistant
-
-Messages
-   |
-   v
- Prompt
-
-
 Remember:
 
 A Message is a part of the conversation. A Prompt represents the request being sent to the model.
 
-15. ChatClient
+12. ChatClient
 
-Now we reach one of the most important Spring AI abstractions.
-
-ChatModel is relatively low-level.
-
-ChatClient provides a higher-level, fluent API for interacting with chat models.
+ChatClient provides a higher-level fluent API for interacting with chat models.
 
 For example:
 
@@ -571,13 +350,11 @@ String response = chatClient
         .content();
 
 
-This is much easier to work with than manually creating every object.
+This is easier than manually constructing every lower-level object.
 
-16. ChatClient vs ChatModel
+13. ChatClient vs ChatModel
 
-This is probably the most important distinction in this topic.
-
-Think about it this way:
+This is one of the most important distinctions in Spring AI.
 
 ChatClient
     |
@@ -604,13 +381,11 @@ Think:
 
 "I need the abstraction representing the actual chat model."
 
-They are not competing abstractions.
+They exist at different abstraction levels.
 
-They exist at different levels.
+14. ChatClient Fluent API
 
-17. ChatClient Fluent API
-
-A typical interaction looks like:
+A typical interaction:
 
 String answer = chatClient
         .prompt()
@@ -620,7 +395,7 @@ String answer = chatClient
         .content();
 
 
-Read it almost like English:
+Read it as:
 
 Create a prompt
       |
@@ -634,25 +409,22 @@ Set user request
 Call the model
       |
       v
-Give me the generated content
+Get the generated content
 
-18. Understanding prompt()
+15. Understanding prompt()
 chatClient.prompt()
 
 
-This starts building an AI request.
+Starts building an AI request.
 
-Conceptually:
+Think:
 
 ChatClient
     |
     v
 "I want to create a prompt."
 
-19. Understanding system()
-
-Example:
-
+16. Understanding system()
 chatClient
         .prompt()
         .system("""
@@ -661,32 +433,15 @@ chatClient
         """)
 
 
-This creates/adds system-level instructions.
+This adds system-level instructions.
 
-Conceptually:
-
-System Message
-      |
-      v
-"You are an expert Java instructor."
-
-20. Understanding user()
-
-Example:
-
+17. Understanding user()
 .user("Explain interfaces.")
 
 
 This adds the user's request.
 
-Conceptually:
-
-User Message
-      |
-      v
-"Explain interfaces."
-
-21. Understanding call()
+18. Understanding call()
 .call()
 
 
@@ -702,13 +457,7 @@ Request constructed
         v
        LLM
 
-
-Before call(), you are essentially building/configuring the request.
-
-22. Understanding content()
-
-Example:
-
+19. Understanding content()
 String answer = chatClient
         .prompt()
         .user("What is dependency injection?")
@@ -716,26 +465,14 @@ String answer = chatClient
         .content();
 
 
-content() gives you the generated textual content.
+content() extracts the generated textual content.
 
-So the result can simply be:
-
-String
-
-
-This is convenient for simple applications.
-
-23. content() vs chatResponse()
-
-You will encounter both concepts.
-
+20. content() vs chatResponse()
 content()
 
-Think:
+Use this mental model:
 
 "I only care about the generated text."
-
-Example:
 
 String answer = chatClient
         .prompt()
@@ -745,7 +482,7 @@ String answer = chatClient
 
 chatResponse()
 
-Think:
+Use this mental model:
 
 "I want the richer model response."
 
@@ -762,12 +499,9 @@ ChatResponse
  +---- Other response information
 
 
-The exact metadata available depends on the model/provider and Spring AI version.
+The exact metadata depends on the Spring AI version and model/provider.
 
-24. Complete ChatClient Example
-
-A simple service could look like this:
-
+21. Complete ChatClient Example
 @Service
 public class AiService {
 
@@ -792,9 +526,7 @@ public class AiService {
 }
 
 
-The important thing is not memorizing the syntax.
-
-Understand the flow:
+The important part is understanding this flow:
 
 chatClient
     |
@@ -813,10 +545,7 @@ call()
     v
 content()
 
-25. Complete Architecture
-
-Now connect all the abstractions.
-
+22. Complete Architecture
                          Spring Boot Application
                                   |
                                   v
@@ -849,14 +578,8 @@ Now connect all the abstractions.
                                   v
                               content()
 
-
-This is the most important diagram for this topic.
-
-26. Lower-Level vs Higher-Level API
-
-There are two important ways to think about using Spring AI.
-
-Higher-level approach
+23. Lower-Level vs Higher-Level API
+Higher-Level API
 String answer = chatClient
         .prompt()
         .user("Explain interfaces.")
@@ -877,7 +600,7 @@ ChatModel
     v
 LLM
 
-Lower-level approach
+Lower-Level API
 
 Conceptually:
 
@@ -899,17 +622,16 @@ LLM
    v
 ChatResponse
 
-27. Why Have Both?
+24. Why Have Both?
 
-Because they solve different problems.
+They solve different problems.
 
 	ChatClient	ChatModel
 Abstraction level	Higher	Lower
 Main purpose	Convenient application API	Model abstraction
 Request construction	Fluent	More explicit
-Typical application usage	Very common	More specialized/lower-level
-Works with	Prompt-building operations	Prompt
-Mental model	"Build an AI request"	"Call the model"
+Typical usage	Application code	Lower-level/custom integrations
+Mental model	Build an AI request	Call the model
 
 Think:
 
@@ -923,9 +645,9 @@ ChatModel
     v
 Provider
 
-28. Spring Boot Auto-Configuration
+25. Spring Boot Auto-Configuration
 
-One of the reasons Spring AI feels natural to Spring developers is Spring Boot integration.
+Spring AI integrates with Spring Boot's auto-configuration.
 
 Conceptually:
 
@@ -945,7 +667,7 @@ Spring AI Auto-Configuration
       +---- EmbeddingModel
 
 
-Your application can then inject these objects using dependency injection.
+Your application can inject these objects using dependency injection.
 
 For example:
 
@@ -959,12 +681,9 @@ public class AiService {
     }
 }
 
+26. Provider Independence
 
-You don't necessarily need to manually construct every underlying provider object.
-
-29. Provider Independence
-
-Suppose your architecture looks like:
+Suppose today your architecture is:
 
 Application
     |
@@ -986,21 +705,18 @@ ChatModel
 Provider B
 
 
-Your application-level architecture can remain largely the same.
+The application-level architecture can remain largely the same.
 
-However, do not interpret this as:
+However, provider independence does not mean all providers are identical.
 
-"I can switch any AI provider without changing anything."
-
-Providers still differ in:
+Providers can differ in:
 
 Supported models
-Model capabilities
 Context windows
 Tool calling
 Structured output
 Multimodal capabilities
-Available parameters
+Model parameters
 Tokenization
 Pricing
 Response metadata
@@ -1009,16 +725,9 @@ Therefore:
 
 Spring AI reduces provider coupling. It does not make all AI providers identical.
 
-30. Why This Architecture Is Useful
+27. Why This Architecture Is Useful
 
-Suppose your business service contains:
-
-public CustomerSummary generateSummary(Customer customer) {
-    // AI logic
-}
-
-
-You don't want your business logic to be filled with provider-specific classes:
+You don't want your business logic filled with provider-specific code:
 
 ProviderClient
 ProviderRequest
@@ -1043,42 +752,11 @@ Provider Implementation
 AI Provider
 
 
-This creates a cleaner separation of concerns.
+This creates better separation of concerns.
 
-31. The Complete Core Abstraction Model
+28. How This Connects to RAG
 
-You should be able to visualize Spring AI like this:
-
-                         YOUR APPLICATION
-                                |
-                +---------------+---------------+
-                |                               |
-                v                               v
-           ChatClient                     EmbeddingModel
-                |                               |
-                v                               v
-             Prompt                    Embedding Provider
-                |
-                v
-            Messages
-                |
-                v
-            ChatModel
-                |
-                v
-       Provider Implementation
-                |
-                v
-               LLM
-                |
-                v
-          ChatResponse
-
-32. How This Connects to RAG
-
-Later in your roadmap, you will study RAG.
-
-The abstractions from this topic become the building blocks.
+Later, when you study RAG, these abstractions become building blocks.
 
                          RAG Application
                                 |
@@ -1102,7 +780,7 @@ The abstractions from this topic become the building blocks.
                               LLM
 
 
-The process becomes:
+A simplified RAG flow:
 
 Question
    |
@@ -1120,19 +798,14 @@ Relevant Chunks         |
    +---------+----------+
              |
              v
-           ChatModel
+          ChatModel
              |
              v
              LLM
 
+29. How This Connects to Memory
 
-This is why understanding today's abstractions is important.
-
-33. How This Connects to Memory
-
-Later you will study chat memory.
-
-Memory essentially introduces previous conversation messages into the model context.
+Memory introduces previous conversation messages into the model context.
 
 Conceptually:
 
@@ -1154,13 +827,13 @@ Current User Message
       LLM
 
 
-This is why understanding Message now is important.
+This is why understanding Message is important before learning chat memory.
 
-34. How This Connects to Tool Calling
+30. How This Connects to Tool Calling
 
 Later you'll learn tool/function calling.
 
-The architecture becomes something like:
+The architecture becomes:
 
 User
   |
@@ -1196,31 +869,7 @@ Answer           Tool Call
 
 Again, the core abstractions remain underneath.
 
-35. How This Connects to Agents
-
-Eventually you'll study agents.
-
-The architecture becomes more complex:
-
-                         Agent
-                           |
-                           v
-                       ChatModel
-                           |
-            +--------------+--------------+
-            |              |              |
-            v              v              v
-          Tool           RAG           Memory
-            |              |              |
-            +--------------+--------------+
-                           |
-                           v
-                         LLM
-
-
-The abstractions learned here remain fundamental.
-
-36. Important Distinctions to Memorize
+31. Important Distinctions to Memorize
 ChatClient vs ChatModel
 ChatClient
     =
@@ -1228,7 +877,7 @@ High-level fluent API
 
 ChatModel
     =
-Model abstraction
+Core model abstraction
 
 Prompt vs Message
 Message
@@ -1237,7 +886,7 @@ One conversational unit
 
 Prompt
     =
-Complete structured request
+Complete structured model request
 
 ChatModel vs EmbeddingModel
 ChatModel
@@ -1257,89 +906,7 @@ chatResponse()
     =
 Give me the structured response
 
-37. A Simple Analogy
-
-Think about ordering food.
-
-ChatClient
-    =
-Restaurant ordering interface
-
-Prompt
-    =
-Your complete order
-
-Message
-    =
-Individual item/instruction in the order
-
-ChatModel
-    =
-Kitchen/order processing system
-
-Provider
-    =
-Restaurant/kitchen implementation
-
-ChatResponse
-    =
-Completed order/result
-
-
-The analogy isn't perfect, but it helps visualize the abstraction layers.
-
-38. What You Should Know After Topic 4
-
-You should be able to answer these questions without looking at documentation.
-
-Question 1
-What is ChatModel?
-
-A core Spring AI abstraction representing interaction with a chat/generative AI model.
-
-Question 2
-What is EmbeddingModel?
-
-An abstraction for converting input such as text into vector embeddings, commonly used for semantic search and RAG.
-
-Question 3
-What is Message?
-
-A structured conversational unit such as a system, user, or assistant message.
-
-Question 4
-What is Prompt?
-
-A structured request sent to a chat model containing messages and potentially model/request options.
-
-Question 5
-What is ChatClient?
-
-A higher-level fluent API that makes constructing and executing chat-model requests easier.
-
-Question 6
-What is the difference between ChatClient and ChatModel?
-ChatClient → Higher-level fluent API
-
-ChatModel  → Core model abstraction
-
-Question 7
-What is the difference between Prompt and Message?
-Message → Individual conversational unit
-
-Prompt  → Complete structured model request
-
-Question 8
-What is the difference between ChatModel and EmbeddingModel?
-ChatModel
-    ↓
-Generate response
-
-EmbeddingModel
-    ↓
-Generate vector representation
-
-39. The Most Important Diagram
+32. The Most Important Diagram
 
 If you remember only one diagram from this topic, remember this:
 
@@ -1371,23 +938,66 @@ If you remember only one diagram from this topic, remember this:
                       ChatResponse
 
 
-And for embeddings:
+For embeddings:
 
 Text
- |
- v
+    |
+    v
 EmbeddingModel
- |
- v
+    |
+    v
 Embedding Provider
- |
- v
+    |
+    v
 Vector
- |
- v
+    |
+    v
 Vector Store
 
-40. Hands-On Study Plan
+33. What You Should Know After Topic 4
+
+You should be able to answer these questions without looking at documentation.
+
+Question 1 — What is ChatModel?
+
+A core Spring AI abstraction representing interaction with a chat/generative AI model.
+
+Question 2 — What is EmbeddingModel?
+
+An abstraction for converting input such as text into vector embeddings, commonly used for semantic search and RAG.
+
+Question 3 — What is Message?
+
+A structured conversational unit such as a system, user, or assistant message.
+
+Question 4 — What is Prompt?
+
+A structured request sent to a chat model containing messages and potentially model/request options.
+
+Question 5 — What is ChatClient?
+
+A higher-level fluent API that makes constructing and executing chat-model requests easier.
+
+Question 6 — What is the difference between ChatClient and ChatModel?
+ChatClient → Higher-level fluent API
+
+ChatModel  → Core model abstraction
+
+Question 7 — What is the difference between Prompt and Message?
+Message → Individual conversational unit
+
+Prompt  → Complete structured model request
+
+Question 8 — What is the difference between ChatModel and EmbeddingModel?
+ChatModel
+    ↓
+Generate response
+
+EmbeddingModel
+    ↓
+Generate vector representation
+
+34. Hands-On Study Plan
 
 The roadmap gives this topic approximately 3–4 hours.
 
@@ -1439,7 +1049,7 @@ GET /api/ask?question=...
            LLM
             |
             v
-        String
+        String response
 
 
 Experiment with:
@@ -1452,11 +1062,11 @@ Then add:
 .system("You are an expert Java instructor.")
 
 
-Observe the difference.
+Observe how the system instruction affects the response.
 
 Hour 3 — Understand the Lower-Level Abstraction
 
-Experiment with the conceptual flow:
+Experiment with:
 
 Prompt
    |
@@ -1478,7 +1088,7 @@ Prompt
 ChatModel
 
 
-Your goal is to understand what ChatClient is giving you on top of ChatModel.
+Your goal is to understand what ChatClient provides on top of ChatModel.
 
 Hour 4 — Embeddings
 
@@ -1493,11 +1103,11 @@ Create embeddings for several sentences:
 
 Then compare their similarity.
 
-This will prepare you for:
+This prepares you for:
 
 Phase 7 — Embeddings
 
-41. Mini Exercise
+35. Mini Exercise
 
 Design this API without looking at the answer:
 
@@ -1544,7 +1154,7 @@ String
 HTTP Response
 
 
-Then answer these questions:
+Then answer:
 
 Why do we need ChatClient?
 Why does ChatModel exist?
@@ -1555,7 +1165,7 @@ Why is EmbeddingModel separate from ChatModel?
 
 If you can answer all six clearly, you understand the core abstractions.
 
-42. Final Cheat Sheet
+36. Final Cheat Sheet
 Concept	Mental Model
 ChatClient	Easy way to build and execute AI requests
 ChatModel	Abstraction over a chat/generative model
@@ -1566,10 +1176,7 @@ UserMessage	User input
 AssistantMessage	Model/assistant response
 ChatResponse	Structured model response
 EmbeddingModel	Input → vector
-43. One-Line Summary
-
-The entire topic can be summarized as:
-
+37. One-Line Summary
 ChatClient
     ↓
 Prompt
