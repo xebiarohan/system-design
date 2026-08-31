@@ -1,4 +1,3 @@
-```markdown
 # What is Spring AI?
 
 ## 1) The problem Spring AI solves
