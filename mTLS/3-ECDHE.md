@@ -212,3 +212,93 @@ Encrypt application data
 ```
 
 That's the key flow to understand for mTLS/TLS.
+
+
+
+# What is the role of the public key in the certificate that a service B sends to service A ?
+
+
+The public key inside Service B's certificate is primarily used to **authenticate Service B's identity**, not to encrypt the ECDHE shared secret.
+
+### What happens?
+
+Service B sends:
+
+```text
+Certificate B
+ ├── B's identity
+ ├── B's public key
+ └── CA's digital signature
+```
+
+Service A has the CA certificate in its truststore.
+
+So A can verify:
+
+```text
+CA signature
+      ↓
+"Yes, this certificate was issued by a trusted CA"
+      ↓
+"This public key really belongs to Service B"
+```
+
+### Then what does B's certificate public key actually do?
+
+In modern TLS with ECDHE, it is used to **verify B's proof of possession of the corresponding private key**.
+
+Simplified:
+
+```text
+Service B
+   │
+   │ Certificate containing B's public key
+   ↓
+Service A
+   │
+   │ "Prove that you own the private key
+   │  corresponding to this public key."
+   ↓
+Service B signs TLS handshake data
+   │
+   ↓
+Service A verifies signature
+using B's certificate public key
+```
+
+If the signature verifies, A knows:
+
+> **"The party I'm talking to possesses the private key associated with the public key in this certificate."**
+
+Combined with the CA validation, A can trust that this is actually **Service B**.
+
+### So there are two different key pairs involved
+
+This is the part that often causes confusion:
+
+| Key                                    | Purpose                             |
+| -------------------------------------- | ----------------------------------- |
+| **Certificate public/private key**     | Authentication / digital signatures |
+| **Ephemeral ECDHE public/private key** | Establish the shared secret         |
+
+So:
+
+```text
+B's Certificate
+      │
+      └── B's public key
+              ↓
+       Authentication
+       "B really owns this identity"
+
+
+B's temporary ECDHE key pair
+              ↓
+       Key exchange
+       "Let's create a shared secret"
+```
+
+And importantly, **B's certificate public key is not normally used to encrypt the ECDHE shared secret** in modern TLS.
+
+That's why ECDHE and certificates can coexist even though they involve different public/private key pairs.
+
