@@ -1,1 +1,2 @@
 1. What are the major differences between PostgreSQL and MySQL, how to decide which database to choose ?
+2. Distributed transactions : 2-phase commit and SAGA pattern
