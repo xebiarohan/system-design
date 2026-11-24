@@ -1170,35 +1170,69 @@ Handle both separately.
 
 ---
 
-# 20. Your key takeaway
+# 20. Validation Example
 
-You can think of the entire topic as:
 
-```text
-Basic Structured Output
-        ↓
-       Object
-        ↓
-Complex Structured Output
-        ↓
- ┌──────┼───────────┐
- ↓      ↓           ↓
-Lists  Nested     Enums
-       Objects
-        ↓
-    Validation
-        ↓
-  Error Handling
+```java
+public class Customer {
+
+    @NotNull
+    private String name;
+
+    @Min(18)
+    @Max(100)
+    private int age;
+
+    @NotNull
+    private String city;
+
+    // getters and setters
+}
+
+
+@Service
+public class CustomerService {
+
+    private final ChatClient chatClient;
+    private final Validator validator;
+
+    public CustomerService(
+            ChatClient chatClient,
+            Validator validator) {
+        this.chatClient = chatClient;
+        this.validator = validator;
+    }
+
+    public Customer extractCustomer() {
+
+        Customer customer = chatClient
+                .prompt()
+                .user("""
+                    Extract customer information from:
+
+                    My name is Rohan, I'm 35 and I live in Dubai.
+                """)
+                .call()
+                .entity(Customer.class);
+
+        Set<ConstraintViolation<Customer>> violations =
+                validator.validate(customer);
+
+        if (!violations.isEmpty()) {
+            throw new ConstraintViolationException(violations);
+        }
+
+        return customer;
+    }
+}
+
+
+make sure to add the validation
+
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-validation</artifactId>
+</dependency>
+
+
 ```
-
-And the **production mindset** is:
-
-> **Never trust an LLM response just because it successfully parsed into a Java object.**
-
-Parsing tells you **"this has the expected shape."**
-
-Validation tells you **"this data is acceptable."**
-
-Business logic tells you **"this is what my application should do."**
-
-That's the real difference between a simple Spring AI demo and a production-quality AI feature.
