@@ -87,6 +87,25 @@ JSON array
 List<Book>
 ```
 
+example:
+
+```java
+import org.springframework.ai.converter.ListOutputConverter;
+import org.springframework.core.convert.support.DefaultConversionService;
+
+ListOutputConverter converter =
+        new ListOutputConverter(new DefaultConversionService());
+
+List<String> response = ChatClient.create(chatModel)
+        .prompt()
+        .user("Give me 5 popular Java frameworks")
+        .call()
+        .entity(converter);
+
+System.out.println(response);
+
+```
+
 ---
 
 # 2. Why Lists matter
